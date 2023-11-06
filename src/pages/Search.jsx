@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import PropTypes from "prop-types";
+
 import { Link } from "react-router-dom";
 import BookCard from "../components/BookCard";
 import { search } from "../BooksAPI";
+import debounce from "../utils/debounce";
+
+const DEBOUNCE_TIME = 400; // 400ms
 
 function Search({ bookShelfMap = {}, onChangeShelf = () => {} }) {
   const [bookList, setBookList] = useState([]);
   const [keyword, setKeyword] = useState("");
-
-  const handleChangeKeyword = (event) => {
-    setKeyword(event.target.value);
-    handleSearchBook(event.target.value);
-  };
 
   const handleSearchBook = async (keyword) => {
     try {
@@ -26,6 +26,16 @@ function Search({ bookShelfMap = {}, onChangeShelf = () => {} }) {
       setBookList([]);
       console.log("Can not search book");
     }
+  };
+
+  const debounceSearch = useMemo(
+    () => debounce(handleSearchBook, DEBOUNCE_TIME),
+    []
+  );
+
+  const handleChangeKeyword = (event) => {
+    setKeyword(event.target.value);
+    debounceSearch(event.target.value);
   };
 
   // add shelf
@@ -69,5 +79,10 @@ function Search({ bookShelfMap = {}, onChangeShelf = () => {} }) {
     </div>
   );
 }
+
+Search.propTypes = {
+  bookShelfMap: PropTypes.object.isRequired,
+  onChangeShelf: PropTypes.func.isRequired,
+};
 
 export default Search;
